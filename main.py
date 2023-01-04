@@ -9,7 +9,7 @@ app = FastAPI()
 
 DATA_PATH = Path("data")
 
-# https://en.wikipedia.org/wiki/Special:RecentChanges?hidebots=1&hidecategorization=1&hideWikibase=1&limit=50&days=7&urlversion=2
+
 class SiteChecker(abc.ABC):
     def __init__(
         self, url: str, element_name: str, element_attributes: dict, cache_path: Path
@@ -34,7 +34,7 @@ class SiteChecker(abc.ABC):
         if request.status_code == 200:
             soup = BeautifulSoup(request.text, "html.parser")
             title = soup.find(self.element_name, self.element_attributes).text
-            with open(self.cache_path, "w") as f:
+            with open(self.cache_path, "w", errors="ignore") as f:
                 f.write(title)
             return title
         else:
@@ -51,10 +51,25 @@ class RedditChecker(SiteChecker):
         )
 
 
-def is_everyone_gone():
-    reddit_updated = RedditChecker().get_has_changed()
+class WikipediaChecker(SiteChecker):
+    def __init__(self):
+        super().__init__(
+            url="https://en.wikipedia.org/wiki/Special:RecentChanges?hidebots=1&hidecategorization=1&hideWikibase=1&limit=50&days=7&urlversion=2",
+            cache_path=Path("data") / "wikipedia.txt",
+            element_name="li",
+            element_attributes={"class": "mw-changeslist-line"},
+        )
 
-    return reddit_updated
+
+SITE_CHECKERS = [
+    RedditChecker(),
+    WikipediaChecker(),
+]
+
+
+def is_everyone_gone():
+    status = [checker.get_has_changed() for checker in SITE_CHECKERS]
+    return not all(status), status
 
 
 @app.get("/")
