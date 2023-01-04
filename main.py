@@ -1,3 +1,4 @@
+import abc
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -7,31 +8,51 @@ from bs4 import BeautifulSoup
 app = FastAPI()
 
 DATA_PATH = Path("data")
-REDDIT_PATH = Path("data") / "reddit.txt"
 
-def get_most_recent_reddit_title():
-    request = requests.get("https://old.reddit.com/r/all/new/")
-    if request.status_code == 200:
-        soup = BeautifulSoup(request.text, "html.parser")
-        title = soup.find("p", {"class": "title"}).text
-        with open(REDDIT_PATH, "w") as f:
-            f.write(title)
+# https://en.wikipedia.org/wiki/Special:RecentChanges?hidebots=1&hidecategorization=1&hideWikibase=1&limit=50&days=7&urlversion=2
+class SiteChecker(abc.ABC):
+    def __init__(
+        self, url: str, element_name: str, element_attributes: dict, cache_path: Path
+    ):
+        self.url = url
+        self.element_name = element_name
+        self.element_attributes = element_attributes
+        self.cache_path = cache_path
+
+    def get_has_changed(self):
+        old_value = self.get_old_value()
+        new_value = self.get_new_value()
+        return not new_value or old_value != new_value
+
+    def get_old_value(self):
+        with open(self.cache_path, "r") as f:
+            title = f.read()
         return title
-    else:
-        return None
 
-def get_old_reddit_title():
-    with open(REDDIT_PATH, "r") as f:
-        title = f.read()
-    return title
+    def get_new_value(self):
+        request = requests.get(self.url)
+        if request.status_code == 200:
+            soup = BeautifulSoup(request.text, "html.parser")
+            title = soup.find(self.element_name, self.element_attributes).text
+            with open(self.cache_path, "w") as f:
+                f.write(title)
+            return title
+        else:
+            return None
 
-def get_reddit_has_updated():
-    old_value = get_old_reddit_title()
-    new_value = get_most_recent_reddit_title()
-    return not new_value or old_value != new_value
+
+class RedditChecker(SiteChecker):
+    def __init__(self):
+        super().__init__(
+            url="https://old.reddit.com/r/all/new/",
+            cache_path=Path("data") / "reddit.txt",
+            element_name="p",
+            element_attributes={"class": "title"},
+        )
+
 
 def is_everyone_gone():
-    reddit_updated = get_reddit_has_updated()
+    reddit_updated = RedditChecker().get_has_changed()
 
     return reddit_updated
 
@@ -40,6 +61,7 @@ def is_everyone_gone():
 async def root():
     return is_everyone_gone()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     result = is_everyone_gone()
     print(result)
