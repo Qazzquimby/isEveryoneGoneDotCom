@@ -2,22 +2,37 @@
 defineOptions({
   name: 'IndexPage',
 })
+
+const data = ref<object>({})
+
+const worldText = computed(() => {
+  if (data.value === {}) {
+    return 'loading...'
+  } else {
+    return JSON.stringify(data.value)
+  }
+})
+
+async function readFirebase() {
+  const response = await fetch('https://is-everyone-gone-default-rtdb.firebaseio.com/.json')
+  return response.json()
+}
+
+onMounted(async () => {
+  const response = await readFirebase()
+  data.value = response
+})
+
 </script>
 
 <template>
   <div>
 
-    <world-status mode="yellow" text="loading..." />
+    <!-- Try a big block letters ISEVERYONEGONE textfit to be one line -->
 
-    <div i-carbon-campsite text-4xl inline-block />
-    <p>
-      <a rel="noreferrer" href="https://github.com/antfu/vitesse-lite" target="_blank">
-        Vitesse Lite
-      </a>
-    </p>
-    <p>
-      <em text-sm op75>Opinionated Vite Starter Template</em>
-    </p>
+    <world-status mode="yellow" :text="worldText" />
+
+    {{ data }}
 
   </div>
 </template>

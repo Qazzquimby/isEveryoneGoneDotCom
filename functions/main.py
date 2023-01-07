@@ -2,6 +2,7 @@ import abc
 import os
 import time
 from pathlib import Path
+from typing import List
 
 from fastapi import FastAPI
 import requests
@@ -17,16 +18,18 @@ key = os.environ.get("FIREBASE_KEY")
 
 # firebase realtime  database
 config = {
-  "apiKey": key,
-  "authDomain": "is-everyone-gone.firebaseapp.com",
-  "databaseURL": "https://is-everyone-gone-default-rtdb.firebaseio.com/",
-  "storageBucket": "is-everyone-gone.appspot.com"
+    "apiKey": key,
+    "authDomain": "is-everyone-gone.firebaseapp.com",
+    "databaseURL": "https://is-everyone-gone-default-rtdb.firebaseio.com/",
+    "storageBucket": "is-everyone-gone.appspot.com",
 }
 
 firebase = pyrebase.initialize_app(config)
 auth: Auth = firebase.auth()
 user = auth.sign_in_anonymous()
 db = firebase.database()
+
+CURRENT_TIMESTAMP = str(int(time.time()))
 
 
 class SiteChecker(abc.ABC):
@@ -37,6 +40,18 @@ class SiteChecker(abc.ABC):
         self.element_name = element_name
         self.element_attributes = element_attributes
         self.cache_name = cache_name
+
+        self.loaded = False
+        self.old_value = None
+        self.last_updated = None
+        self.last_successful_read = None
+
+        self.new_value = None
+
+    def load(self, cache):
+        self.loaded = True
+        self.old_value = self.get_old_value(cache)
+        self.new_value = self.get_new_value()
 
     def get_old_value(self, cache: dict):
         old_value = cache.get(self.cache_name)
@@ -51,6 +66,9 @@ class SiteChecker(abc.ABC):
         soup = BeautifulSoup(request.text, "html.parser")
         title = soup.find(self.element_name, self.element_attributes).text
         return title
+
+    def get_has_changed(self):
+        return self.new_value is not None and self.old_value != self.new_value
 
 
 class RedditChecker(SiteChecker):
@@ -72,41 +90,64 @@ class WikipediaChecker(SiteChecker):
             element_attributes={"class": "mw-changeslist-line"},
         )
 
-SITE_CHECKERS = [
+
+SITE_CHECKERS: List[SiteChecker] = [
     RedditChecker(),
     WikipediaChecker(),
 ]
 
 
-def save_cache(new_values):
-    timestamp = str(int(time.time()))
-    new_cache = { checker.cache_name: new_value for checker, new_value in zip(SITE_CHECKERS, new_values) }
-    new_cache["timestamp"] = timestamp
+def save_cache(site_checkers: List[SiteChecker]):
+    new_cache = {}
+    for checker in site_checkers:
+        site_cache = {
+            "last_checked": CURRENT_TIMESTAMP,
+        }
+        if checker.new_value is not None:
+            site_cache.update(
+                {
+                    "last_checked": CURRENT_TIMESTAMP,
+                    "last_successful_read": CURRENT_TIMESTAMP,
+                    "value": checker.new_value,
+                }
+            )
+            if checker.get_has_changed():
+                site_cache["last_updated"] = CURRENT_TIMESTAMP
+
+        new_cache[checker.cache_name] = site_cache
     db.set(new_cache)
 
-def is_everyone_gone():
-    cache = db.get().val()
-    old_values = [checker.get_old_value(cache) for checker in SITE_CHECKERS]
-    new_values = [checker.get_new_value() for checker in SITE_CHECKERS]
 
-    save_cache(new_values)
+def update_db():
+    cache = db.get().val()
+    if cache is None:
+        cache = {}
+
+    for checker in SITE_CHECKERS:
+        checker.load(cache)
+
+    save_cache(SITE_CHECKERS)
 
     response = [
-        {"name": checker.cache_name,
-         "old": old,
-         "new": new,}
-        for checker, old, new in zip(SITE_CHECKERS, old_values, new_values)
+        {
+            "name": checker.cache_name,
+            "old": checker.old_value,
+            "new": checker.new_value,
+            "has_changed": checker.get_has_changed(),
+            "has_new_value": checker.new_value is not None,
+            "last_updated": checker.last_updated,
+            "last_successful_read": checker.last_successful_read,
+        }
+        for checker in SITE_CHECKERS
     ]
     return response
 
-def get_has_changed(old, new):
-    return new is not None and old != new
 
 @app.get("/")
 async def root():
-    return is_everyone_gone()
+    return update_db()
 
 
 if __name__ == "__main__":
-    result = is_everyone_gone()
+    result = update_db()
     print(result)
