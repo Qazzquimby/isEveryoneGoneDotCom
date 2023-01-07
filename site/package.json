@@ -38,6 +38,14 @@
     "vue-tsc": "^1.0.10"
   },
   "eslintConfig": {
-    "extends": "@antfu"
+    "extends": "@antfu",
+    "overrides": [
+      {
+        "files": ["*.vue", "*.ts"],
+        "rules": {
+          "curly": ["all", "warn"]
+        }
+      }
+    ]
   }
 }
