@@ -1,8 +1,7 @@
 <script setup lang="ts">
 
 const props = defineProps<{
-  mode: 'green' | 'yellow' | 'red'
-  text: string
+  mode: 'green' | 'yellow' | 'red' | 'gray'
 }>()
 
 interface display {
@@ -29,6 +28,12 @@ const redMode = {
   textColor: 'c-red-800',
 }
 
+const grayMode = {
+  bgColor: 'bg-gray-100',
+  borderColor: 'b-gray-800',
+  textColor: 'c-gray-800',
+}
+
 const display = computed(() => {
   switch (props.mode) {
     case 'green':
@@ -37,6 +42,8 @@ const display = computed(() => {
       return yellowMode
     case 'red':
       return redMode
+    case 'gray':
+      return grayMode
   }
 })
 
@@ -53,10 +60,7 @@ const displayClasses = computed(() => {
       b="4px rd-5"
       :class="displayClasses"
       >
-      <h3 text-2xl>
-        {{text}}
-      </h3>
-
+      <slot />
     </div>
 
   </div>

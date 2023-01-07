@@ -1,15 +1,40 @@
 <script setup lang="ts">
-defineOptions({
-  name: 'IndexPage',
+interface SiteStatus {
+  name: String;
+  lastChecked: String;
+  lastSuccessfulRead: String;
+  lastUpdated: String;
+  value: string;
+}
+
+const sites = ref<SiteStatus[]>([])
+
+const updatePercent = computed(() => {
+  if (sites.value.length === 0) {
+    return 0
+  }
+
+  let numSitesUpdated = 0;
+  let totalSitesRead = 0;
+  for (const site of sites.value) {
+    if (site.lastChecked !== site.lastSuccessfulRead) {
+      continue
+    }
+
+    if (site.lastChecked === site.lastUpdated) {
+      numSitesUpdated += 1
+    }
+    totalSitesRead += 1
+  }
+
+  return (numSitesUpdated / totalSitesRead) * 100
 })
 
-const data = ref<object>({})
-
-const worldText = computed(() => {
-  if (data.value === {}) {
-    return 'loading...'
+const worldMode = computed(() => {
+  if (sites.value.length === 0) {
+    return 'gray'
   } else {
-    return JSON.stringify(data.value)
+    return 'green'
   }
 })
 
@@ -20,7 +45,18 @@ async function readFirebase() {
 
 onMounted(async () => {
   const response = await readFirebase()
-  data.value = response
+
+  const sitesFromResponse = Object.keys(response).map((key) => {
+    return {
+      name: key,
+      lastChecked: response[key].lastChecked,
+      lastSuccessfulRead: response[key].lastSuccessfulRead,
+      lastUpdated: response[key].lastUpdated,
+      value: response[key].value,
+    }
+  })
+
+  sites.value = sitesFromResponse as SiteStatus[]
 })
 
 </script>
@@ -30,9 +66,32 @@ onMounted(async () => {
 
     <!-- Try a big block letters ISEVERYONEGONE textfit to be one line -->
 
-    <world-status mode="yellow" :text="worldText" />
+    <world-status :mode="worldMode">
+      <div v-if="sites.length === 0">
+        <h3>
+          Loading...
+        </h3>
+      </div>
+      <div v-else-if="updatePercent >= 25">
+        <h3>
+          They're still here.
+        </h3>
+        <p>
+          {{ updatePercent }} percent of scanned sites updated in the last 30 minutes.
+        </p>
+      </div>
+      <div v-else>
+        <h3>
+          They're gone. Or more likely, this site is broken.
+        </h3>
+        <p>
+          {{ updatePercent }} percent of scanned sites updated in the last 30 minutes.
+        </p>
+        </div>
 
-    {{ data }}
+    </world-status>
+
+    {{ sites }}
 
   </div>
 </template>
