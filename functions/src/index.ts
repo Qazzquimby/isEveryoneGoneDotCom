@@ -5,6 +5,8 @@ import * as functions from "firebase-functions";
 import {initializeApp} from "firebase/app";
 import {get, getDatabase, ref, set} from "firebase/database";
 
+import {JSDOM} from "jsdom";
+
 const key = process.env.FIREBASE_KEY;
 
 const config = {
@@ -31,8 +33,7 @@ type SiteCache = Record<string, string>;
 type Cache = Record<string, SiteCache>;
 class SiteChecker {
   url: string;
-  elementName: string;
-  elementAttributes: Record<string, string>;
+  selector: string;
   cacheName: string;
   loaded: boolean;
   oldValue: string | null;
@@ -42,13 +43,11 @@ class SiteChecker {
 
   constructor(
       url: string,
-      elementName: string,
-      elementAttributes: Record<string, string>,
+      selector: string,
       cacheName: string,
   ) {
     this.url = url;
-    this.elementName = elementName;
-    this.elementAttributes = elementAttributes;
+    this.selector = selector;
     this.cacheName = cacheName;
 
     this.loaded = false;
@@ -77,9 +76,9 @@ class SiteChecker {
       return null;
     }
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(text, "text/html");
-    const element = doc.querySelector(this.elementName);
+    const dom = new JSDOM(text);
+    const element = dom.window.document.querySelector(this.selector);
+
     if (element === null) {
       console.log("Element not found");
       return null;
@@ -96,8 +95,6 @@ class SiteChecker {
 
 class RedditChecker extends SiteChecker {
   url = "https://old.reddit.com/r/all/new/";
-  elementName = "p";
-  elementAttributes = {class: "title"};
   cacheName = "reddit";
   loaded = false;
   oldValue = null;
@@ -108,8 +105,7 @@ class RedditChecker extends SiteChecker {
   constructor() {
     super(
         "https://old.reddit.com/r/all/new/",
-        "p",
-        {class: "title"},
+        "p.title",
         "reddit",
     );
   }
@@ -117,7 +113,7 @@ class RedditChecker extends SiteChecker {
 
 class WikipediaChecker extends SiteChecker {
   url = "https://en.wikipedia.org/wiki/Special:RecentChanges?hidebots=1&hidecategorization=1&hideWikibase=1&limit=50&days=7&urlversion=2";
-  elementName = "li";
+  selector = "li";
   elementAttributes = {class: "mw-changeslist-line"};
   cacheName = "wikipedia";
   loaded = false;
@@ -129,8 +125,7 @@ class WikipediaChecker extends SiteChecker {
   constructor() {
     super(
         "https://en.wikipedia.org/wiki/Special:RecentChanges?hidebots=1&hidecategorization=1&hideWikibase=1&limit=50&days=7&urlversion=2",
-        "li",
-        {class: "mw-changeslist-line"},
+        "li.mw-changeslist-line",
         "wikipedia",
     );
   }
@@ -160,7 +155,7 @@ async function saveCache(siteCheckers: SiteChecker[]) {
   await set(ref(db), newCache);
 }
 
-async function updateDb() {
+export async function updateDb() {
   let cache: Cache = (await get(ref(db))).val();
   if (cache === null) {
     cache = {};
