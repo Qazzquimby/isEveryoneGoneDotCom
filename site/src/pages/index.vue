@@ -1,11 +1,5 @@
 <script setup lang="ts">
-interface SiteStatus {
-  name: String;
-  lastChecked: String;
-  lastSuccessfulRead: String;
-  lastUpdated: String;
-  value: string;
-}
+
 
 const sites = ref<SiteStatus[]>([])
 
@@ -91,7 +85,6 @@ onMounted(async () => {
 
     </world-status>
 
-    {{ sites }}
-
+    <site-status v-for="site in sites" :key="site.name" :site="site" />
   </div>
 </template>
