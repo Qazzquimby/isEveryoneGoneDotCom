@@ -1,10 +1,9 @@
 /* eslint-disable require-jsdoc */
-// updateDb function. Runs every 30 minutes, uses "https://is-everyone-gone-default-rtdb.firebaseio.com/",
 
 import * as functions from "firebase-functions";
-// import firebase from "firebase/app";
-// require("firebase/auth");
-// require("firebase/database");
+
+import {initializeApp} from "firebase/app";
+import {get, getDatabase, ref, set} from "firebase/database";
 
 const key = process.env.FIREBASE_KEY;
 
@@ -15,17 +14,14 @@ const config = {
   storageBucket: "is-everyone-gone.appspot.com",
 };
 
-// firebase.initializeApp(config);
-
-// const auth = firebase.auth();
-// const user = auth.signInAnonymously();
-// const db = firebase.database();
+const app = initializeApp(config);
+const db = getDatabase(app);
 
 const CURRENT_TIMESTAMP = Math.floor(Date.now() / 1000).toString();
 
 export const recurringUpdateDb = functions.pubsub
     .schedule("every 30 minutes")
-    .onRun(async (_context) => {
+    .onRun(async () => {
       await updateDb();
 
       functions.logger.info("Updated db", {structuredData: true});
@@ -161,17 +157,17 @@ async function saveCache(siteCheckers: SiteChecker[]) {
     }
     newCache[checker.cacheName] = siteCache;
   }
-  await db.set(newCache);
+  await set(ref(db), newCache);
 }
 
 async function updateDb() {
-  let cache = (await db.get()).val();
+  let cache: Cache = (await get(ref(db))).val();
   if (cache === null) {
     cache = {};
   }
 
   for (const checker of SITE_CHECKERS) {
-    checker.load(cache);
+    checker.load(cache[checker.cacheName]);
   }
 
   await saveCache(SITE_CHECKERS);
@@ -188,3 +184,4 @@ async function updateDb() {
   return response;
 }
 
+updateDb().then((response) => console.log(response));

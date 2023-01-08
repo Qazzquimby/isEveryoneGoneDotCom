@@ -11,10 +11,11 @@
     "logs": "firebase functions:log"
   },
   "engines": {
-    "node": "16"
+    "node": "18"
   },
   "main": "lib/index.js",
   "dependencies": {
+    "firebase": "^9.15.0",
     "firebase-admin": "^10.0.2",
     "firebase-functions": "^3.18.0"
   },
