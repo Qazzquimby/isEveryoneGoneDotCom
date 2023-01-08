@@ -1,9 +1,7 @@
 /* eslint-disable require-jsdoc */
 
 import * as functions from "firebase-functions";
-
-import {initializeApp} from "firebase/app";
-import {get, getDatabase, ref, set} from "firebase/database";
+import admin from "firebase-admin";
 
 import {JSDOM} from "jsdom";
 
@@ -16,8 +14,8 @@ const config = {
   storageBucket: "is-everyone-gone.appspot.com",
 };
 
-const app = initializeApp(config);
-const db = getDatabase(app);
+const app = admin.initializeApp(config);
+const db = app.database();
 
 const CURRENT_TIMESTAMP = Math.floor(Date.now() / 1000).toString();
 
@@ -31,6 +29,7 @@ export const recurringUpdateDb = functions.pubsub
 
 type SiteCache = Record<string, string>;
 type Cache = Record<string, SiteCache>;
+
 class SiteChecker {
   url: string;
   selector: string;
@@ -152,18 +151,19 @@ async function saveCache(siteCheckers: SiteChecker[]) {
     }
     newCache[checker.cacheName] = siteCache;
   }
-  await set(ref(db), newCache);
+  await db.ref().set(newCache);
 }
 
 export async function updateDb() {
-  let cache: Cache = (await get(ref(db))).val();
+  let cache: Cache = (await db.ref().get()).val();
   if (cache === null) {
     cache = {};
   }
 
-  for (const checker of SITE_CHECKERS) {
-    checker.load(cache[checker.cacheName]);
-  }
+  await Promise.all( SITE_CHECKERS.map(
+      (checker) => checker.load(cache[checker.cacheName])
+  ));
+
 
   await saveCache(SITE_CHECKERS);
 
