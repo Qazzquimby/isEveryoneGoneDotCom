@@ -52,6 +52,7 @@ class SiteChecker(abc.ABC):
         self.loaded = True
         self.old_value = self.get_old_value(cache)
         self.new_value = self.get_new_value()
+        # need to set timestamps
 
     def get_old_value(self, cache: dict):
         old_value = cache.get(self.cache_name)
@@ -151,3 +152,7 @@ async def root():
 if __name__ == "__main__":
     result = update_db()
     print(result)
+
+
+#######
+# Rewrite all the above code in typescript:
