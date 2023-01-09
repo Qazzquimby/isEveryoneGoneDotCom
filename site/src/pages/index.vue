@@ -1,6 +1,5 @@
 <script setup lang="ts">
 
-
 const sites = ref<SiteStatus[]>([])
 
 const updatePercent = computed(() => {
@@ -22,6 +21,16 @@ const updatePercent = computed(() => {
   }
 
   return (numSitesUpdated / totalSitesRead) * 100
+})
+
+
+const title = useTitle()
+watch(updatePercent, (newValue) => {
+  if (newValue >= 25) {
+    title.value = 'They\'re still here.'
+  } else {
+    title.value = 'They\'re gone.'
+  }
 })
 
 const worldMode = computed(() => {
@@ -56,7 +65,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div>
+  <div w-70vw max-w-50rem mx-auto>
 
     <!-- Try a big block letters ISEVERYONEGONE textfit to be one line -->
 

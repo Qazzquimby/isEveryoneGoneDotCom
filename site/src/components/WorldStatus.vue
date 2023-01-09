@@ -56,7 +56,7 @@ const displayClasses = computed(() => {
 <template>
   <div>
 
-    <div w-70vw mx-auto p-3rem m-1rem
+    <div p-3rem my-1rem
       b="4px rd-5"
       :class="displayClasses"
       >
