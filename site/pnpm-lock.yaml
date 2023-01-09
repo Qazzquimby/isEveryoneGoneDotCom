@@ -3,7 +3,6 @@ lockfileVersion: 5.4
 specifiers:
   '@antfu/eslint-config': ^0.33.0
   '@iconify-json/carbon': ^1.1.11
-  '@iconify-json/simple-icons': 1.1.40
   '@types/node': ^18.11.9
   '@unocss/reset': ^0.47.2
   '@vitejs/plugin-vue': ^3.2.0
@@ -11,6 +10,7 @@ specifiers:
   '@vue/test-utils': ^2.2.4
   '@vueuse/core': ^9.6.0
   eslint: ^8.28.0
+  javascript-time-ago: ^2.5.9
   jsdom: ^20.0.3
   pnpm: ^7.17.1
   taze: ^0.8.4
@@ -28,13 +28,13 @@ specifiers:
 
 dependencies:
   '@vueuse/core': 9.6.0_vue@3.2.45
+  javascript-time-ago: 2.5.9
   vue: 3.2.45
   vue-router: 4.1.6_vue@3.2.45
 
 devDependencies:
   '@antfu/eslint-config': 0.33.0_hsf322ms6xhhd4b5ne6lb74y4a
   '@iconify-json/carbon': 1.1.11
-  '@iconify-json/simple-icons': 1.1.40
   '@types/node': 18.11.9
   '@unocss/reset': 0.47.2
   '@vitejs/plugin-vue': 3.2.0_vite@3.2.4+vue@3.2.45
@@ -309,12 +309,6 @@ packages:
 
   /@iconify-json/carbon/1.1.11:
     resolution: {integrity: sha512-IHkHSNmTM6q6b8DuKSzd+AEMYPZywSxcb+37kZU7ywtcwsGen3aVEvWFykopIWjjwj3xdZ/5UdwJRqhZDQMlNg==}
-    dependencies:
-      '@iconify/types': 2.0.0
-    dev: true
-
-  /@iconify-json/simple-icons/1.1.40:
-    resolution: {integrity: sha512-k+dCMQsVDVh2mrIkJpD5d/Jax+UTAlOf3YejXW1ZAwBtlu6Mq4CkO50VSJujNZRGFtPmPGAZSWbr1q72FFmR7A==}
     dependencies:
       '@iconify/types': 2.0.0
     dev: true
@@ -3189,6 +3183,12 @@ packages:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
     dev: true
 
+  /javascript-time-ago/2.5.9:
+    resolution: {integrity: sha512-pQ8mNco/9g9TqWXWWjP0EWl6i/lAQScOyEeXy5AB+f7MfLSdgyV9BJhiOD1zrIac/lrxPYOWNbyl/IW8CW5n0A==}
+    dependencies:
+      relative-time-format: 1.1.6
+    dev: false
+
   /jiti/1.16.0:
     resolution: {integrity: sha512-L3BJStEf5NAqNuzrpfbN71dp43mYIcBUlCRea/vdyv5dW/AYa1d4bpelko4SHdY3I6eN9Wzyasxirj1/vv5kmg==}
     hasBin: true
@@ -4232,6 +4232,10 @@ packages:
     dependencies:
       jsesc: 0.5.0
     dev: true
+
+  /relative-time-format/1.1.6:
+    resolution: {integrity: sha512-aCv3juQw4hT1/P/OrVltKWLlp15eW1GRcwP1XdxHrPdZE9MtgqFpegjnTjLhi2m2WI9MT/hQQtE+tjEWG1hgkQ==}
+    dev: false
 
   /require-directory/2.1.1:
     resolution: {integrity: sha512-fGxEI7+wsG9xrvdjsrlmL22OMTTiHRwAMroiEeMgq8gzoLC/PQr7RsRDSTLUg/bZAZtF+TVIkHc6/4RIKrui+Q==}

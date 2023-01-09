@@ -1,7 +1,7 @@
 interface SiteStatus {
-  name: String;
-  lastChecked: String;
-  lastSuccessfulRead: String;
-  lastUpdated: String;
+  name: string;
+  lastChecked: string;
+  lastSuccessfulRead: string;
+  lastUpdated: string;
   value: string;
 }

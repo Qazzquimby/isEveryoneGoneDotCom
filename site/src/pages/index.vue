@@ -69,14 +69,14 @@ onMounted(async () => {
 
     <!-- Try a big block letters ISEVERYONEGONE textfit to be one line -->
 
-    <world-status :mode="worldMode">
+    <world-status :mode="worldMode" mb-2rem>
       <div v-if="sites.length === 0">
-        <h3>
+        <h3 text-xl>
           Loading...
         </h3>
       </div>
       <div v-else-if="updatePercent >= 25">
-        <h3>
+        <h3 text-xl>
           They're still here.
         </h3>
         <p>
@@ -84,7 +84,7 @@ onMounted(async () => {
         </p>
       </div>
       <div v-else>
-        <h3>
+        <h3 text-xl>
           They're gone. Or more likely, this site is broken.
         </h3>
         <p>
