@@ -1,5 +1,5 @@
 <template>
-  <nav text-xl mt-6 inline-flex gap-2>
+  <nav text-xl mt-6 flex justify-center gap-2>
     <a
       class="icon-btn"
       i-simple-icons-kofi

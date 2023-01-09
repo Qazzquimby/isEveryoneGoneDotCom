@@ -85,6 +85,6 @@ onMounted(async () => {
 
     </world-status>
 
-    <site-status v-for="site in sites" :key="site.name" :site="site" />
+    <site-status v-for="site in sites" key="site.name" :site="site" />
   </div>
 </template>
